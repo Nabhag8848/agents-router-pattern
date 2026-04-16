@@ -1,5 +1,9 @@
 # Multi-Source Knowledge Router
 
+
+https://github.com/user-attachments/assets/e22d0706-f221-4425-89d7-85276c817b2b
+
+
 An AI-powered knowledge retrieval system that classifies user queries, routes them in parallel to specialized source agents (GitHub, Notion, Slack), and synthesizes a unified answer. Built with LangGraph for orchestration and LangChain for agent tooling.
 
 ## What It Does
