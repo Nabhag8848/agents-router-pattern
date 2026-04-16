@@ -15,49 +15,51 @@ This eliminates the need to manually search across multiple platforms — one qu
 
 ## Architecture
 
+```mermaid
+graph TD
+    Q["🔍 User Query"] --> C
+
+    subgraph Router["Router Layer — gpt-4.1-mini"]
+        C["Classify & Route"]
+    end
+
+    C -->|"Send(github)"| GH
+    C -->|"Send(notion)"| NT
+    C -->|"Send(slack)"| SL
+
+    subgraph Agents["Parallel Source Agents — gpt-4.1"]
+        GH["GitHub Agent<br/><code>search_code</code><br/><code>search_issues</code><br/><code>search_prs</code>"]
+        NT["Notion Agent<br/><code>search_notion</code><br/><code>get_page</code>"]
+        SL["Slack Agent<br/><code>search_slack</code><br/><code>get_thread</code>"]
+    end
+
+    GH --> S
+    NT --> S
+    SL --> S
+
+    subgraph Synthesis["Synthesis Layer — gpt-4.1-mini"]
+        S["Synthesize Results"]
+    end
+
+    S --> A["✅ Final Answer"]
+
+    style Router fill:#e8f4f8,stroke:#2196F3
+    style Agents fill:#fff3e0,stroke:#FF9800
+    style Synthesis fill:#e8f5e9,stroke:#4CAF50
 ```
-                         ┌─────────────────┐
-                         │   User Query    │
-                         └────────┬────────┘
-                                  │
-                                  ▼
-                      ┌───────────────────────┐
-                      │   Classify (Router)    │
-                      │   gpt-4.1-mini         │
-                      │                        │
-                      │ Analyzes query and     │
-                      │ picks relevant sources │
-                      └───┬───────┬───────┬────┘
-                          │       │       │
-               ┌──────────┘       │       └──────────┐
-               │                  │                   │
-               ▼                  ▼                   ▼
-     ┌─────────────────┐ ┌──────────────────┐ ┌─────────────────┐
-     │  GitHub Agent    │ │  Notion Agent    │ │  Slack Agent    │
-     │  gpt-4.1         │ │  gpt-4.1         │ │  gpt-4.1        │
-     │                  │ │                  │ │                  │
-     │ Tools:           │ │ Tools:           │ │ Tools:           │
-     │ • search_code    │ │ • search_notion  │ │ • search_slack   │
-     │ • search_issues  │ │ • get_page       │ │ • get_thread     │
-     │ • search_prs     │ │                  │ │                  │
-     └────────┬─────────┘ └────────┬─────────┘ └────────┬────────┘
-              │                    │                     │
-              └────────────┬───────┘─────────────────────┘
-                           │
-                           ▼
-                ┌──────────────────────┐
-                │   Synthesize         │
-                │   gpt-4.1-mini       │
-                │                      │
-                │ Merges all agent     │
-                │ results into a       │
-                │ unified answer       │
-                └──────────┬───────────┘
-                           │
-                           ▼
-                  ┌─────────────────┐
-                  │  Final Answer   │
-                  └─────────────────┘
+
+### LangGraph State Flow
+
+```mermaid
+stateDiagram-v2
+    [*] --> classify: query
+    classify --> github: Send (parallel)
+    classify --> notion: Send (parallel)
+    classify --> slack: Send (parallel)
+    github --> synthesize: results (reducer appends)
+    notion --> synthesize: results (reducer appends)
+    slack --> synthesize: results (reducer appends)
+    synthesize --> [*]: finalAnswer
 ```
 
 ## Project Structure
